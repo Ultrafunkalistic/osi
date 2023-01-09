@@ -1,0 +1,53 @@
+# Author: Roy Hutton (roy@ositechnology.co.uk)
+# FHL
+# 24.06.2019
+
+Function Kick-GlobalProtect {
+
+While ($true) {
+
+# Get Latest 15501 Event from Log
+
+$pluginevent = Get-WinEvent -LogName "Microsoft-Windows-Wired-AutoConfig/Operational" | Where-Object -Property Id -EQ 15501 | select -First 1 
+$plugineventid = $pluginevent.RecordId
+
+#Sleep Then Check Latest 15501 Event Again
+
+Start-Sleep -s 3
+$latesteventnow = Get-WinEvent -LogName "Microsoft-Windows-Wired-AutoConfig/Operational" | Where-Object -Property Id -EQ 15501 | select -First 1 
+$latestevent = $latesteventnow.RecordId
+# $pangp = Get-NetAdapter -InterfaceDescription "PANGP Virtual Ethernet Adapter"
+# $dellgig = Get-NetAdapter -InterfaceDescription "Dell Giga Ethernet" -ErrorAction Ignore
+# If the event Record doesnt match the latest 15501 event IdRecord Run This Code
+Try {#>
+
+If ($plugineventid -ne $latestevent -and $pluginevent.Message -notcontains "Network Adapter: PANGP Virtual Ethernet Adapter" ) { 
+
+                                        Write-Host " Resetting PanGP "
+
+                                        Restart-NetAdapter -InterfaceDescription 'PANGP Virtual Ethernet Adapter' -confirm:$false
+                                        
+                                        <#If ($pangp.Status -eq "Up" -and $dellgig.status -eq "Up") {
+                                        Restart-NetAdapter -InterfaceDescription 'PANGP Virtual Ethernet Adapter' -confirm:$false }    
+                                        #>}
+
+}
+
+
+Catch { $_ | Out-File C:\Windows\Temp\fhl-networkswitch-errors.txt -Append
+            
+
+    }
+Remove-Variable -Name pluginevent
+Remove-Variable -Name plugineventid
+Remove-Variable -Name latesteventnow
+Remove-Variable -Name latestevent
+Start-Sleep -Seconds 2
+
+
+}
+        
+        }
+
+Kick-GlobalProtect
+
