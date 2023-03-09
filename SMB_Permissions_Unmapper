@@ -1,0 +1,24 @@
+# SMB Permission Removal
+# This script removes ALL User Permissions from Shared Mailboxes 
+# (for example if you migrate SMB's to EOL from on Prem Exchange and still have the old SMB's mapped to the users accounts 
+# (if they're using both mailboxes before migrating across)
+
+# Master List
+$smb = Import-Csv C:\Scripts\csv\csv_of_mailboxes.csv
+
+
+ForEach($smb_a in $smb) { 
+$smb_p = Get-MailboxPermission -Identity $smb_a.PrimarySMTPAddress
+ForEach($p in $smb_p) { 
+$p_core = $p.user.rawidentity
+
+If ($p_core -ne $null){
+
+Remove-MailboxPermission -Identity $smb_a.PrimarySMTPAddress -accessrights FullAccess -user $p_core -Confirm:$false -Verbose
+Remove-MailboxPermission -Identity $smb_a.PrimarySMTPAddress -accessrights DeleteItem -user $p_core -Confirm:$false -Verbose
+Remove-MailboxPermission -Identity $smb_a.PrimarySMTPAddress -accessrights ReadPermission -user $p_core -Confirm:$false -Verbose
+}
+    
+    }
+
+            }
